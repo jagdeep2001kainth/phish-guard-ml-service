@@ -29,6 +29,45 @@ def test():
         'vectorizer': str(type(tfidf_vectorizer))
     })
 
+@app.route('/predict', methods=['POST'])
+def predict():
+    try:
+        print("Step 1: Request received")
+        data = request.json['email_text']
+        print(f"Step 2: Email text received: {data[:50]}")
+        
+        transformed_text = tfidf_vectorizer.transform([data])
+        print("Step 3: TF-IDF transform done")
+        
+        rf_prob = rf_model.predict_proba(transformed_text)[:, 1][0]
+        print(f"Step 4: RF prediction done: {rf_prob}")
+
+        # if you still have LSTM
+        # seq = tokenizer.texts_to_sequences([data])
+        # print("Step 5: Tokenizer done")
+        # padded_seq = pad_sequences(seq, maxlen=MAX_SEQUENCE_LENGTH, padding='post')
+        # print("Step 6: Padding done")
+        # lstm_prob = lstm_model.predict(padded_seq, verbose=0)[0][0]
+        # print(f"Step 7: LSTM prediction done: {lstm_prob}")
+
+        avg_prob = rf_prob
+        prediction = "Phishing" if avg_prob > 0.7 else "Safe"
+        phishing_percent = round(float(avg_prob) * 100, 2)
+        safe_percent = round((1 - float(avg_prob)) * 100, 2)
+
+        print("Step 8: Returning response")
+        return jsonify({
+            'prediction': prediction,
+            'phishing_probability': phishing_percent,
+            'safe_probability': safe_percent,
+            'reason': get_reason(data)
+        })
+    except Exception as e:
+        print(f"ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500    
+
 def get_reason(email_text):
     suspicious_keywords = ['verify', 'login', 'urgent', 'password', 'click here', 'account', 'suspend']
     found = [word for word in suspicious_keywords if word.lower() in email_text.lower()]
