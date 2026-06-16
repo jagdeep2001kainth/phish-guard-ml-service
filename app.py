@@ -79,35 +79,35 @@ def health():
     return jsonify({'status': 'ok'})
 
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    try:
-        data = request.json['email_text']
+# @app.route('/predict', methods=['POST'])
+# def predict():
+#     try:
+#         data = request.json['email_text']
 
-        # RF Prediction
-        transformed_text = tfidf_vectorizer.transform([data])
-        rf_prob = rf_model.predict_proba(transformed_text)[:, 1][0]
+#         # RF Prediction
+#         transformed_text = tfidf_vectorizer.transform([data])
+#         rf_prob = rf_model.predict_proba(transformed_text)[:, 1][0]
 
-        # LSTM Prediction
-        seq = tokenizer.texts_to_sequences([data])
-        padded_seq = pad_sequences(seq, maxlen=MAX_SEQUENCE_LENGTH, padding='post')
-        lstm_prob = lstm_model.predict(padded_seq, verbose=0)[0][0]
+#         # LSTM Prediction
+#         seq = tokenizer.texts_to_sequences([data])
+#         padded_seq = pad_sequences(seq, maxlen=MAX_SEQUENCE_LENGTH, padding='post')
+#         lstm_prob = lstm_model.predict(padded_seq, verbose=0)[0][0]
 
-        # Ensemble Prediction
-        avg_prob = (rf_prob + lstm_prob) / 2
-        prediction = "Phishing" if avg_prob > 0.8 else "Safe"
-        phishing_percent = round(avg_prob * 100, 2)
-        safe_percent = round((1 - avg_prob) * 100, 2)
+#         # Ensemble Prediction
+#         avg_prob = (rf_prob + lstm_prob) / 2
+#         prediction = "Phishing" if avg_prob > 0.8 else "Safe"
+#         phishing_percent = round(avg_prob * 100, 2)
+#         safe_percent = round((1 - avg_prob) * 100, 2)
 
-        return jsonify({
-            'prediction': prediction,
-            'phishing_probability': phishing_percent,
-            'safe_probability': safe_percent,
-            'reason': get_reason(data)
+#         return jsonify({
+#             'prediction': prediction,
+#             'phishing_probability': phishing_percent,
+#             'safe_probability': safe_percent,
+#             'reason': get_reason(data)
             
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+#         })
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 
 if __name__ == '__main__':
