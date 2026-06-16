@@ -21,6 +21,13 @@ tokenizer = joblib.load("tokenizer.pkl")
 
 MAX_SEQUENCE_LENGTH = 500
 
+@app.route('/test', methods=['GET'])
+def test():
+    return jsonify({
+        'status': 'ok',
+        'rf_model': str(type(rf_model)),
+        'vectorizer': str(type(tfidf_vectorizer))
+    })
 
 def get_reason(email_text):
     suspicious_keywords = ['verify', 'login', 'urgent', 'password', 'click here', 'account', 'suspend']
@@ -58,6 +65,7 @@ def predict():
             'phishing_probability': phishing_percent,
             'safe_probability': safe_percent,
             'reason': get_reason(data)
+            
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -66,3 +74,4 @@ def predict():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
+    
